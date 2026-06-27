@@ -365,16 +365,11 @@
   const CATEGORIES = ['Campus','Bangladesh','Satire','Opinion','Tech','Sports','Culture','Feature'];
 
   // ── Refs ────────────────────────────────────────────────────────────────────
-  const _db             = SAU.firebase.db;
-  const _auth           = SAU.firebase.auth;
-  const _signIn         = SAU.firebase.signInWithGoogle;
-  const _signOut        = SAU.firebase.signOut;
-  const uploadImage     = SAU.cloudinary.upload;
-  const cloudinaryGetUrl = SAU.cloudinary.getImageUrl;
-
-  // Shortcuts
-  const db   = _db;
-  const auth = _auth;
+  const adminDb      = SAU.firebase.db;
+  const adminAuth    = SAU.firebase.auth;
+  const adminSignIn  = SAU.firebase.signInWithGoogle;
+  const adminSignOut = SAU.firebase.signOut;
+  const uploadImage  = SAU.cloudinary.upload;
 
   let currentUser = null;
   let editingId   = null;
@@ -408,7 +403,7 @@
     btn.disabled = true;
     err.style.display = 'none';
     try {
-      await _signIn();
+      await adminSignIn();
     } catch (e) {
       err.textContent = e.message;
       err.style.display = 'block';
@@ -418,10 +413,10 @@
   });
 
   document.getElementById('btn-signout').addEventListener('click', async () => {
-    await _signOut();
+    await adminSignOut();
   });
 
-  auth.onAuthStateChanged(async (user) => {
+  adminAuth.onAuthStateChanged(async (user) => {
     if (!user) {
       document.getElementById('login-screen').style.display = 'flex';
       document.getElementById('app').classList.remove('visible');
@@ -429,7 +424,7 @@
       return;
     }
     if (!ADMIN_EMAILS.includes(user.email)) {
-      await _signOut();
+      await adminSignOut();
       const err = document.getElementById('login-error');
       err.textContent = 'Access denied. This email is not authorized.';
       err.style.display = 'block';
@@ -483,7 +478,7 @@
 
   async function loadStats() {
     try {
-      const snap = await db.collection('articles').get();
+      const snap = await adminDb.collection('articles').get();
       const all = snap.docs.map(d => d.data());
       document.getElementById('stat-total').textContent = all.length;
       document.getElementById('stat-published').textContent = all.filter(a => a.status === 'published').length;
@@ -504,7 +499,7 @@
     const container = document.getElementById(containerId);
     if (!container) return;
     try {
-      let query = db.collection('articles').orderBy('createdAt', 'desc');
+      let query = adminDb.collection('articles').orderBy('createdAt', 'desc');
       if (limit) query = query.limit(limit);
       const snap = await query.get();
       allArticles = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -751,19 +746,19 @@
 
     try {
       if (editingId) {
-        await db.collection('articles').doc(editingId).update(data);
+        await adminDb.collection('articles').doc(editingId).update(data);
         showToast(status === 'published' ? 'Article published ✓' : 'Draft saved ✓', 'success');
       } else {
         data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
         data.views = 0;
         data.loves = 0;
-        const ref = await db.collection('articles').add(data);
+        const ref = await adminDb.collection('articles').add(data);
         editingId = ref.id;
         showToast(status === 'published' ? 'Article published ✓' : 'Draft saved ✓', 'success');
       }
 
       // Update homepage data flag
-      await db.collection('siteConfig').doc('lastUpdated').set({
+      await adminDb.collection('siteConfig').doc('lastUpdated').set({
         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
         by: currentUser.email,
       }, { merge: true });
@@ -784,7 +779,7 @@
     const content = document.getElementById('content');
     content.innerHTML = '<div class="empty-state"><p>Loading article…</p></div>';
     try {
-      const snap = await db.collection('articles').doc(id).get();
+      const snap = await adminDb.collection('articles').doc(id).get();
       if (!snap.exists) { showToast('Article not found', 'error'); return; }
       const article = { id: snap.id, ...snap.data() };
       renderEditor(content, article);
@@ -810,7 +805,7 @@
     btn.innerHTML = '<span class="spinner"></span>';
     btn.disabled = true;
     try {
-      await db.collection('articles').doc(deleteTargetId).delete();
+      await adminDb.collection('articles').doc(deleteTargetId).delete();
       document.getElementById('delete-modal').classList.remove('open');
       showToast('Article deleted', 'success');
       deleteTargetId = null;
