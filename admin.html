@@ -472,8 +472,36 @@
       <div class="table-header"><div>Recent Articles</div><div>Category</div><div>Status</div><div>Date</div><div>Actions</div></div>
       <div id="recent-list"><div class="empty-state"><p>Loading...</p></div></div>
     </div>`;
-    loadArticles('recent-list', 5);
+    loadDashboardArticles();
     loadStats();
+  }
+
+  async function loadDashboardArticles() {
+    const container = document.getElementById('recent-list');
+    if (!container) return;
+    try {
+      const snap = await adminDb.collection('articles').orderBy('createdAt', 'desc').limit(5).get();
+      const articles = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (!articles.length) {
+        container.innerHTML = `<div class="empty-state"><p>No articles yet.</p></div>`;
+        return;
+      }
+      container.innerHTML = articles.map(a => {
+        const date = a.createdAt?.toDate ? a.createdAt.toDate().toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'}) : '—';
+        return `<div class="article-row">
+          <div class="article-title-cell">${escHtml(a.title || 'Untitled')}<small>${escHtml(a.excerpt || '')}</small></div>
+          <div><span style="font-size:11px;color:var(--muted)">${escHtml(a.category || '—')}</span></div>
+          <div><span class="badge ${a.status === 'published' ? 'badge-published' : 'badge-draft'}">${a.status || 'draft'}</span></div>
+          <div style="font-size:11px;color:var(--muted)">${date}</div>
+          <div class="row-actions">
+            <button class="btn btn-secondary btn-sm" onclick="editArticle('${a.id}')">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="confirmDelete('${a.id}')">Del</button>
+          </div>
+        </div>`;
+      }).join('');
+    } catch(e) {
+      container.innerHTML = `<div class="empty-state"><p>Error: ${e.message}</p></div>`;
+    }
   }
 
   async function loadStats() {
@@ -488,14 +516,38 @@
 
   // ── Article List ─────────────────────────────────────────────────────────────
   async function renderArticleList(el) {
-    el.innerHTML = `<div class="articles-table">
-      <div class="table-header"><div>Title</div><div>Category</div><div>Status</div><div>Date</div><div>Actions</div></div>
-      <div id="all-articles-list"><div class="empty-state"><p>Loading...</p></div></div>
+    el.innerHTML = `
+    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+      <div style="flex:1;min-width:200px;position:relative">
+        <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--muted-2)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="search-input" placeholder="Search articles…" style="padding-left:32px;width:100%" />
+      </div>
+      <select id="category-filter" style="min-width:140px">
+        <option value="">All Categories</option>
+        ${CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('')}
+      </select>
+      <select id="status-filter" style="min-width:120px">
+        <option value="">All Status</option>
+        <option value="published">Published</option>
+        <option value="draft">Draft</option>
+      </select>
+      <span id="articles-count" style="font-size:12px;color:var(--muted);white-space:nowrap"></span>
+    </div>
+    <div class="articles-table">
+      <div class="table-header" style="grid-template-columns:1fr 110px 90px 110px 160px">
+        <div>Title</div><div>Category</div><div>Status</div><div>Date</div><div>Actions</div>
+      </div>
+      <div id="all-articles-list"><div class="empty-state"><p>Loading…</p></div></div>
     </div>`;
-    loadArticles('all-articles-list');
+
+    await loadArticles();
+
+    document.getElementById('search-input').addEventListener('input', filterArticles);
+    document.getElementById('category-filter').addEventListener('change', filterArticles);
+    document.getElementById('status-filter').addEventListener('change', filterArticles);
   }
 
-  async function loadArticles(containerId, limit = 0) {
+  async function loadArticles(containerId = 'all-articles-list', limit = 0) {
     const container = document.getElementById(containerId);
     if (!container) return;
     try {
@@ -503,30 +555,68 @@
       if (limit) query = query.limit(limit);
       const snap = await query.get();
       allArticles = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      if (!allArticles.length) {
-        container.innerHTML = `<div class="empty-state">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          <p>No articles yet. <button class="btn btn-primary btn-sm" style="margin-top:10px" data-view="new-article">Write your first article</button></p>
-        </div>`;
-        container.querySelector('[data-view]')?.addEventListener('click', e => showView(e.target.dataset.view));
-        return;
-      }
-      container.innerHTML = allArticles.map(a => {
-        const date = a.createdAt?.toDate ? a.createdAt.toDate().toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'}) : '—';
-        return `<div class="article-row">
-          <div class="article-title-cell">${escHtml(a.title || 'Untitled')}<small>${escHtml(a.excerpt || '')}</small></div>
-          <div><span style="font-size:11px;color:var(--muted)">${escHtml(a.category || '—')}</span></div>
-          <div><span class="badge ${a.status === 'published' ? 'badge-published' : 'badge-draft'}">${a.status || 'draft'}</span></div>
-          <div style="font-size:11px;color:var(--muted)">${date}</div>
-          <div class="row-actions">
-            <button class="btn btn-secondary btn-sm" onclick="editArticle('${a.id}')">Edit</button>
-            <button class="btn btn-danger btn-sm" onclick="confirmDelete('${a.id}')">Del</button>
-          </div>
-        </div>`;
-      }).join('');
+      renderArticleRows(allArticles);
     } catch(e) {
-      container.innerHTML = `<div class="empty-state"><p>Error loading articles: ${e.message}</p></div>`;
+      container.innerHTML = `<div class="empty-state"><p>Error: ${e.message}</p></div>`;
     }
+  }
+
+  function filterArticles() {
+    const search   = (document.getElementById('search-input')?.value || '').toLowerCase();
+    const category = document.getElementById('category-filter')?.value || '';
+    const status   = document.getElementById('status-filter')?.value || '';
+
+    const filtered = allArticles.filter(a => {
+      const matchSearch   = !search   || (a.title || '').toLowerCase().includes(search) || (a.excerpt || '').toLowerCase().includes(search);
+      const matchCategory = !category || a.category === category;
+      const matchStatus   = !status   || a.status === status;
+      return matchSearch && matchCategory && matchStatus;
+    });
+    renderArticleRows(filtered);
+  }
+
+  function renderArticleRows(articles) {
+    const container = document.getElementById('all-articles-list');
+    if (!container) return;
+
+    const countEl = document.getElementById('articles-count');
+    if (countEl) countEl.textContent = `${articles.length} article${articles.length !== 1 ? 's' : ''}`;
+
+    if (!articles.length) {
+      container.innerHTML = `<div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <p>No articles found.</p>
+      </div>`;
+      return;
+    }
+
+    container.innerHTML = articles.map(a => {
+      const date = a.createdAt?.toDate
+        ? a.createdAt.toDate().toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'})
+        : '—';
+      const isPublished = a.status === 'published';
+      return `<div class="article-row" style="grid-template-columns:1fr 110px 90px 110px 160px">
+        <div class="article-title-cell">
+          ${a.coverImage ? `<img src="${escHtml(a.coverImage)}" style="width:36px;height:36px;object-fit:cover;border-radius:4px;float:left;margin-right:10px;margin-top:2px" />` : ''}
+          ${escHtml(a.title || 'Untitled')}
+          <small>${escHtml(a.excerpt || '')}</small>
+        </div>
+        <div><span style="font-size:11px;color:var(--muted)">${escHtml(a.category || '—')}</span></div>
+        <div><span class="badge ${isPublished ? 'badge-published' : 'badge-draft'}">${a.status || 'draft'}</span></div>
+        <div style="font-size:11px;color:var(--muted)">${date}</div>
+        <div class="row-actions" style="flex-wrap:wrap;gap:4px">
+          <button class="btn btn-secondary btn-sm" onclick="previewArticle('${a.id}')" title="Preview">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="editArticle('${a.id}')" title="Edit">Edit</button>
+          <button class="btn btn-sm" style="background:${isPublished ? 'var(--yellow-bg)' : 'var(--blue-bg)'};color:${isPublished ? '#a07800' : 'var(--blue)'};border:1px solid ${isPublished ? '#e0c060' : '#90bce0'}"
+            onclick="togglePublish('${a.id}','${a.status}')" title="${isPublished ? 'Unpublish' : 'Publish'}">
+            ${isPublished ? 'Unpublish' : 'Publish'}
+          </button>
+          <button class="btn btn-danger btn-sm" onclick="confirmDelete('${a.id}')" title="Delete">Del</button>
+        </div>
+      </div>`;
+    }).join('');
   }
 
   // ── Editor ───────────────────────────────────────────────────────────────────
@@ -771,6 +861,59 @@
     }
   }
 
+  // ── Toggle Publish/Unpublish ─────────────────────────────────────────────────
+  async function togglePublish(id, currentStatus) {
+    const newStatus = currentStatus === 'published' ? 'draft' : 'published';
+    try {
+      await adminDb.collection('articles').doc(id).update({
+        status: newStatus,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      // Update local array
+      const idx = allArticles.findIndex(a => a.id === id);
+      if (idx !== -1) allArticles[idx].status = newStatus;
+      renderArticleRows(allArticles);
+      showToast(newStatus === 'published' ? 'Article published ✓' : 'Moved to draft', 'success');
+    } catch(e) {
+      showToast('Error: ' + e.message, 'error');
+    }
+  }
+
+  // ── Preview Article ───────────────────────────────────────────────────────────
+  function previewArticle(id) {
+    const article = allArticles.find(a => a.id === id);
+    if (!article) return;
+
+    const preview = window.open('', '_blank');
+    preview.document.write(`<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Preview — ${escHtml(article.title || 'Untitled')}</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  body{font-family:'Inter',sans-serif;max-width:720px;margin:0 auto;padding:40px 20px;background:#f8f5ef;color:#12100d}
+  .preview-badge{background:#fff3cd;color:#856404;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;display:inline-block;margin-bottom:20px}
+  h1{font-family:'Playfair Display',serif;font-size:36px;line-height:1.2;margin:0 0 12px}
+  .meta{font-size:12px;color:#6b6358;margin-bottom:24px;display:flex;gap:16px;flex-wrap:wrap}
+  .cover{width:100%;height:360px;object-fit:cover;border-radius:8px;margin-bottom:28px}
+  .body{font-size:16px;line-height:1.8;white-space:pre-wrap}
+  .excerpt{font-size:18px;color:#6b6358;margin-bottom:24px;font-style:italic;border-left:3px solid #c0341a;padding-left:16px}
+</style>
+</head><body>
+<div class="preview-badge">⚠ PREVIEW — ${article.status === 'published' ? 'Published' : 'Draft'}</div>
+${article.coverImage ? `<img class="cover" src="${article.coverImage}" alt="Cover" />` : ''}
+<h1>${escHtml(article.title || 'Untitled')}</h1>
+<div class="meta">
+  <span>By ${escHtml(article.authorName || 'Admin')}</span>
+  <span>${article.category || ''}</span>
+  <span>${article.createdAt?.toDate ? article.createdAt.toDate().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : ''}</span>
+</div>
+${article.excerpt ? `<div class="excerpt">${escHtml(article.excerpt)}</div>` : ''}
+<div class="body">${escHtml(article.body || '')}</div>
+</body></html>`);
+    preview.document.close();
+  }
+
   // ── Edit Article ─────────────────────────────────────────────────────────────
   async function editArticle(id) {
     editingId = id;
@@ -829,8 +972,10 @@
   }
 
   // Expose for inline onclick handlers
-  window.editArticle = editArticle;
-  window.confirmDelete = confirmDelete;
+  window.editArticle    = editArticle;
+  window.confirmDelete  = confirmDelete;
+  window.togglePublish  = togglePublish;
+  window.previewArticle = previewArticle;
 </script>
 </body>
 </html>
