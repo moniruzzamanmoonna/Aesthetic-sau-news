@@ -508,9 +508,9 @@
     try {
       const snap = await adminDb.collection('articles').get();
       const all = snap.docs.map(d => d.data());
-      document.getElementById('stat-total').textContent = all.length;
-      document.getElementById('stat-published').textContent = all.filter(a => a.status === 'published').length;
-      document.getElementById('stat-drafts').textContent = all.filter(a => a.status === 'draft').length;
+      const t = document.getElementById('stat-total'); const p = document.getElementById('stat-published'); const d2 = document.getElementById('stat-drafts'); if(t) t.textContent = all.length;
+      if(p) p.textContent = all.filter(a => a.status === 'published').length;
+      if(d2) d2.textContent = all.filter(a => a.status === 'draft').length;
     } catch(e) { console.error(e); }
   }
 
