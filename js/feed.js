@@ -204,6 +204,18 @@
       </li>`;
     }).join('');
   }
+  function activateCoverImages() {
+    document.querySelectorAll(".cover img").forEach(function(img) {
+      var cover = img.closest(".cover");
+      if (!cover) return;
+      if (img.complete) { cover.classList.add("img-loaded"); }
+      else {
+        img.addEventListener("load", function() { cover.classList.add("img-loaded"); });
+        img.addEventListener("error", function() { cover.classList.add("img-loaded"); });
+      }
+    });
+  }
+
 
   // ── Main loader ───────────────────────────────────────────────────────────────
   waitForFirebase(async function(db) {
@@ -229,6 +241,7 @@
       renderTrending(articles);
       renderPopularToday(byViews);
       renderEditorsPick(articles.slice(4));
+      setTimeout(activateCoverImages, 50);
 
       console.log(`[SAU Feed] Loaded ${articles.length} articles ✓`);
     } catch (e) {
