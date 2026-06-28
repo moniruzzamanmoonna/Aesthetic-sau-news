@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="bn" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loading… — Aesthetic SAU NEWS</title>
+  <meta name="description" content="" />
+  <meta property="og:type" content="article" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,900;1,700&family=Inter:wght@400;500;600;700&family=Hind+Siliguri:wght@400;500;600;700&family=Tiro+Bangla:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:#f8f5ef; --bg-2:#f0ebe0; --paper:#ffffff; --ink:#12100d;
+      --muted:#6b6358; --muted-2:#9a9183; --line:#e2ddd2; --line-2:#ccc7bb;
+      --accent:#c0341a; --accent-h:#a02a12; --yellow:#e0b400; --yellow-bg:#fef9e0;
+      --green:#1a7a3a; --blue:#1a5fa0; --blue-bg:#e8f0fa; --purple:#6a3a9a; --purple-bg:#f0e8fa;
+      --shadow:0 1px 0 rgba(0,0,0,.04),0 8px 24px -12px rgba(0,0,0,.16);
+      --shadow-md:0 4px 16px -4px rgba(0,0,0,.12);
+      --radius:5px; --radius-lg:10px;
+      --font-serif:'Playfair Display','Tiro Bangla',Georgia,serif;
+      --font-sans:'Inter','Hind Siliguri',system-ui,sans-serif;
+      --t-fast:.15s cubic-bezier(.4,0,.2,1);
+      --t-med:.28s cubic-bezier(.4,0,.2,1);
+      --max-w:720px;
+    }
+    [data-theme="dark"] {
+      --bg:#0e0c09; --bg-2:#161310; --paper:#1a1714; --ink:#f0e8d8;
+      --muted:#9a9183; --muted-2:#6b6358; --line:#2c2820; --line-2:#3a342a;
+      --accent:#e84c2b; --yellow:#f0c000; --yellow-bg:#1e1800;
+      --green:#2aaa52; --blue:#4a9fdf; --blue-bg:#0d1f35;
+      --purple:#aa7adf; --purple-bg:#1a0f2a;
+      --shadow:0 1px 0 rgba(0,0,0,.2),0 8px 24px -12px rgba(0,0,0,.5);
+      --shadow-md:0 4px 16px -4px rgba(0,0,0,.4);
+    }
+
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+    html { font-size:16px; scroll-behavior:smooth; }
+    body { font-family:var(--font-sans); background:var(--bg); color:var(--ink); min-height:100vh; }
+    a { color:inherit; text-decoration:none; }
+
+    /* ── Navbar ── */
+    .navbar {
+      background:var(--paper); border-bottom:1px solid var(--line);
+      position:sticky; top:0; z-index:100;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0 24px; height:52px;
+    }
+    .navbar-logo { font-family:var(--font-serif); font-size:18px; font-weight:900; letter-spacing:-.5px; }
+    .navbar-logo span { color:var(--accent); }
+    .navbar-actions { display:flex; gap:8px; align-items:center; }
+    .nav-btn {
+      background:none; border:1px solid var(--line); border-radius:var(--radius);
+      padding:5px 12px; font-size:12px; font-weight:600; cursor:pointer;
+      color:var(--muted); font-family:inherit; transition:all var(--t-fast);
+      display:flex; align-items:center; gap:5px;
+    }
+    .nav-btn:hover { border-color:var(--accent); color:var(--accent); }
+    .nav-btn svg { width:13px; height:13px; }
+    .back-btn { text-decoration:none; }
+
+    /* ── Progress bar ── */
+    .reading-progress {
+      position:fixed; top:52px; left:0; height:2px; width:0%;
+      background:var(--accent); z-index:99; transition:width .1s linear;
+    }
+
+    /* ── Article container ── */
+    .article-wrap { max-width:var(--max-w); margin:0 auto; padding:40px 20px 80px; }
+
+    /* ── Category + meta ── */
+    .article-eyebrow { display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+    .cat-pill {
+      display:inline-flex; align-items:center; gap:5px;
+      padding:4px 10px; border-radius:20px; font-size:11px; font-weight:700;
+      letter-spacing:.08em; text-transform:uppercase; border:1px solid transparent;
+      transition:all var(--t-fast);
+    }
+    .c-campus  { background:var(--blue-bg);   color:var(--blue);   border-color:rgba(26,95,160,.2); }
+    .c-sara    { background:rgba(192,52,26,.1); color:var(--accent); border-color:rgba(192,52,26,.2); }
+    .c-satire  { background:var(--yellow-bg); color:#8a6000;        border-color:rgba(224,180,0,.3); }
+    .c-opinion { background:var(--purple-bg); color:var(--purple);  border-color:rgba(106,58,154,.2); }
+    .c-tech    { background:#e8faf0;           color:#1a7a3a;        border-color:rgba(26,122,58,.2); }
+    .c-feature { background:var(--bg-2);       color:var(--muted);   border-color:var(--line-2); }
+    [data-theme="dark"] .c-satire { color:var(--yellow); }
+    [data-theme="dark"] .c-opinion { color:var(--purple); }
+
+    /* ── Title ── */
+    .article-title {
+      font-family:var(--font-serif); font-size:clamp(28px, 5vw, 42px);
+      font-weight:900; line-height:1.18; letter-spacing:-.5px;
+      margin-bottom:16px; color:var(--ink);
+    }
+    .article-dek {
+      font-size:18px; color:var(--muted); line-height:1.6;
+      margin-bottom:24px; max-width:60ch;
+    }
+
+    /* ── Author + meta ── */
+    .article-meta {
+      display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+      padding:16px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+      margin-bottom:28px;
+    }
+    .author-mini { display:flex; align-items:center; gap:10px; }
+    .author-avatar-sm {
+      width:36px; height:36px; border-radius:50%; background:var(--accent);
+      color:#fff; display:flex; align-items:center; justify-content:center;
+      font-weight:700; font-size:14px; flex-shrink:0;
+    }
+    .author-name-sm { font-size:13px; font-weight:600; }
+    .author-role-sm { font-size:11px; color:var(--muted); }
+    .meta-divider { color:var(--line-2); }
+    .meta-item { font-size:12px; color:var(--muted); display:flex; align-items:center; gap:4px; }
+    .meta-item svg { width:12px; height:12px; opacity:.6; }
+    .view-count { font-size:12px; color:var(--muted); display:flex; align-items:center; gap:4px; }
+
+    /* ── Cover image ── */
+    .article-cover {
+      width:100%; aspect-ratio:16/9; border-radius:var(--radius-lg);
+      overflow:hidden; margin-bottom:32px; background:var(--bg-2);
+      position:relative;
+    }
+    .article-cover img { width:100%; height:100%; object-fit:cover; display:block; }
+    .cover-caption {
+      font-size:11px; color:var(--muted-2); margin-top:6px;
+      text-align:center; font-style:italic;
+    }
+
+    /* ── Article body ── */
+    .article-body {
+      font-size:17px; line-height:1.85; color:var(--ink);
+      font-family:var(--font-sans);
+    }
+    .article-body p { margin-bottom:1.4em; }
+    .article-body h2 { font-family:var(--font-serif); font-size:24px; font-weight:700; margin:2em 0 .6em; }
+    .article-body h3 { font-family:var(--font-serif); font-size:20px; font-weight:700; margin:1.6em 0 .5em; }
+    .article-body blockquote {
+      border-left:3px solid var(--accent); padding:12px 20px; margin:1.6em 0;
+      background:var(--bg-2); border-radius:0 var(--radius) var(--radius) 0;
+      font-style:italic; color:var(--muted);
+    }
+    .article-body a { color:var(--accent); text-decoration:underline; text-underline-offset:2px; }
+    .article-body ul, .article-body ol { padding-left:1.5em; margin-bottom:1.4em; }
+    .article-body li { margin-bottom:.4em; }
+    .article-body img { width:100%; border-radius:var(--radius); margin:1em 0; }
+    .article-body hr { border:none; border-top:1px solid var(--line); margin:2em 0; }
+
+    /* ── Tags ── */
+    .article-tags { display:flex; flex-wrap:wrap; gap:6px; margin:32px 0 24px; }
+    .tag {
+      padding:5px 12px; border-radius:20px; border:1px solid var(--line);
+      font-size:12px; color:var(--muted); background:var(--bg-2);
+      transition:all var(--t-fast);
+    }
+    .tag:hover { border-color:var(--accent); color:var(--accent); background:rgba(192,52,26,.05); }
+
+    /* ── Actions ── */
+    .article-actions-bar {
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+      padding:20px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+      margin-bottom:40px;
+    }
+    .action-btn {
+      display:inline-flex; align-items:center; gap:6px;
+      padding:8px 16px; border-radius:24px; border:1.5px solid var(--line);
+      background:var(--paper); color:var(--muted); font-size:13px; font-weight:600;
+      cursor:pointer; font-family:inherit; transition:all var(--t-fast);
+    }
+    .action-btn svg { width:15px; height:15px; }
+    .action-btn:hover { border-color:var(--accent); color:var(--accent); }
+    .action-btn.loved { border-color:var(--accent); color:var(--accent); background:rgba(192,52,26,.06); }
+    .action-btn.loved svg { fill:var(--accent); }
+    .action-btn.bookmarked { border-color:var(--yellow); color:#8a6000; }
+    [data-theme="dark"] .action-btn.bookmarked { color:var(--yellow); }
+
+    /* ── Related articles ── */
+    .related-section { margin-top:48px; }
+    .related-title { font-family:var(--font-serif); font-size:20px; font-weight:700; margin-bottom:20px; }
+    .related-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:20px; }
+    .related-card {
+      background:var(--paper); border-radius:var(--radius-lg); overflow:hidden;
+      box-shadow:var(--shadow); border:1px solid var(--line); cursor:pointer;
+      transition:transform var(--t-fast), box-shadow var(--t-fast);
+    }
+    .related-card:hover { transform:translateY(-3px); box-shadow:var(--shadow-md); }
+    .related-cover { aspect-ratio:16/9; overflow:hidden; background:var(--bg-2); }
+    .related-cover img { width:100%; height:100%; object-fit:cover; transition:transform var(--t-med); }
+    .related-card:hover .related-cover img { transform:scale(1.05); }
+    .related-body { padding:14px; }
+    .related-cat { font-size:10px; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:6px; }
+    .related-title-sm { font-size:14px; font-weight:700; line-height:1.3; margin-bottom:6px; }
+    .related-meta { font-size:11px; color:var(--muted-2); }
+
+    /* ── Share dropdown ── */
+    .share-wrap { position:relative; }
+    .share-dropdown {
+      position:absolute; bottom:calc(100% + 8px); left:0;
+      background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-lg);
+      box-shadow:var(--shadow-md); min-width:160px; overflow:hidden;
+      display:none; z-index:50;
+    }
+    .share-dropdown.open { display:block; }
+    .share-dropdown a {
+      display:block; padding:10px 16px; font-size:13px;
+      transition:background var(--t-fast); color:var(--ink);
+    }
+    .share-dropdown a:hover { background:var(--bg-2); }
+
+    /* ── Loading skeleton ── */
+    .skeleton {
+      background:linear-gradient(90deg,var(--bg-2) 25%,var(--line) 50%,var(--bg-2) 75%);
+      background-size:200% 100%; animation:shimmer 1.5s infinite;
+      border-radius:var(--radius);
+    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .sk-title { height:48px; margin-bottom:16px; }
+    .sk-line { height:16px; margin-bottom:10px; }
+    .sk-cover { aspect-ratio:16/9; border-radius:var(--radius-lg); margin-bottom:28px; }
+
+    /* ── Not found ── */
+    .not-found { text-align:center; padding:80px 20px; }
+    .not-found h2 { font-family:var(--font-serif); font-size:32px; margin-bottom:12px; }
+    .not-found p { color:var(--muted); margin-bottom:24px; }
+
+    /* ── Draft badge ── */
+    .draft-notice {
+      background:var(--yellow-bg); border:1px solid rgba(224,180,0,.4);
+      border-radius:var(--radius); padding:10px 16px; margin-bottom:20px;
+      font-size:13px; color:#8a6000; display:flex; align-items:center; gap:8px;
+    }
+    [data-theme="dark"] .draft-notice { color:var(--yellow); }
+
+    /* ── Sticky actions ── */
+    .sticky-actions {
+      position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+      background:var(--paper); border:1px solid var(--line); border-radius:32px;
+      padding:8px 16px; display:flex; gap:4px; align-items:center;
+      box-shadow:var(--shadow-md); z-index:50;
+      opacity:0; transition:opacity var(--t-med); pointer-events:none;
+    }
+    .sticky-actions.visible { opacity:1; pointer-events:all; }
+    .sticky-actions .action-btn { padding:6px 12px; font-size:12px; }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <a href="/" class="navbar-logo"><span>SAU</span> NEWS</a>
+  <div class="navbar-actions">
+    <a href="/" class="nav-btn back-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Back
+    </a>
+    <button class="nav-btn" id="theme-btn" title="Toggle theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+  </div>
+</nav>
+
+<!-- Reading progress -->
+<div class="reading-progress" id="readingProgress"></div>
+
+<!-- Main article -->
+<div class="article-wrap" id="article-wrap">
+  <!-- Skeleton loading -->
+  <div id="skeleton">
+    <div class="skeleton sk-title"></div>
+    <div class="skeleton sk-line" style="width:80%"></div>
+    <div class="skeleton sk-line" style="width:60%;margin-bottom:24px"></div>
+    <div class="skeleton sk-cover"></div>
+    <div class="skeleton sk-line"></div>
+    <div class="skeleton sk-line"></div>
+    <div class="skeleton sk-line" style="width:90%"></div>
+    <div class="skeleton sk-line" style="width:70%"></div>
+  </div>
+</div>
+
+<!-- Sticky actions (visible on scroll) -->
+<div class="sticky-actions" id="sticky-actions">
+  <button class="action-btn" id="sticky-love">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 10-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+    <span id="sticky-love-count">0</span>
+  </button>
+  <button class="action-btn" id="sticky-bookmark">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+  </button>
+  <div class="share-wrap">
+    <button class="action-btn" id="sticky-share">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
+      Share
+    </button>
+    <div class="share-dropdown" id="sticky-share-dd">
+      <a href="#" onclick="shareTo('facebook');return false">📘 Facebook</a>
+      <a href="#" onclick="shareTo('twitter');return false">🐦 Twitter / X</a>
+      <a href="#" onclick="shareTo('whatsapp');return false">💬 WhatsApp</a>
+      <a href="#" onclick="copyLink();return false">🔗 Copy link</a>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase.js"></script>
+
+<script>
+(function () {
+
+  // ── Theme ────────────────────────────────────────────────────────────────────
+  const html = document.documentElement;
+  const saved = localStorage.getItem('sau-theme');
+  if (saved) html.setAttribute('data-theme', saved);
+  document.getElementById('theme-btn').addEventListener('click', () => {
+    const d = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', d ? 'light' : 'dark');
+    localStorage.setItem('sau-theme', d ? 'light' : 'dark');
+  });
+
+  // ── Helpers ──────────────────────────────────────────────────────────────────
+  function esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function timeAgo(date) {
+    if (!date) return '';
+    const diff = (Date.now() - date.getTime()) / 1000;
+    if (diff < 60) return 'just now';
+    if (diff < 3600) return Math.floor(diff/60) + ' min ago';
+    if (diff < 86400) return Math.floor(diff/3600) + ' hr ago';
+    if (diff < 604800) return Math.floor(diff/86400) + ' days ago';
+    return date.toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'});
+  }
+  function readTime(body) {
+    return Math.max(1, Math.round((body||'').split(/\s+/).length / 200)) + ' min read';
+  }
+  function catClass(cat) {
+    const m = {Campus:'c-campus',Bangladesh:'c-sara','Sara Bangladesh':'c-sara',Satire:'c-satire',Opinion:'c-opinion',Tech:'c-tech',Feature:'c-feature'};
+    return m[cat] || 'c-campus';
+  }
+  function formatBody(text) {
+    // Convert plain text to paragraphs, support basic markdown-like
+    return text.split(/\n\n+/).map(p => {
+      p = p.trim();
+      if (!p) return '';
+      if (p.startsWith('## ')) return `<h2>${esc(p.slice(3))}</h2>`;
+      if (p.startsWith('# '))  return `<h2>${esc(p.slice(2))}</h2>`;
+      if (p.startsWith('> '))  return `<blockquote>${esc(p.slice(2))}</blockquote>`;
+      return `<p>${esc(p).replace(/\n/g,'<br>')}</p>`;
+    }).join('');
+  }
+
+  // ── Reading progress ─────────────────────────────────────────────────────────
+  const progressBar = document.getElementById('readingProgress');
+  const stickyActions = document.getElementById('sticky-actions');
+  window.addEventListener('scroll', () => {
+    const scrolled = window.scrollY;
+    const total = document.body.scrollHeight - window.innerHeight;
+    progressBar.style.width = Math.min(100, (scrolled / total) * 100) + '%';
+    if (scrolled > 400) stickyActions.classList.add('visible');
+    else stickyActions.classList.remove('visible');
+  });
+
+  // ── URL params ───────────────────────────────────────────────────────────────
+  const params = new URLSearchParams(window.location.search);
+  const articleId = params.get('id');
+
+  if (!articleId) {
+    showNotFound('No article ID provided.');
+    return;
+  }
+
+  // ── Wait for Firebase ────────────────────────────────────────────────────────
+  function waitForFirebase(cb, tries = 0) {
+    if (window.SAU && window.SAU.firebase && window.SAU.firebase.db) return cb(window.SAU.firebase.db);
+    if (tries > 40) { showNotFound('Could not connect to database.'); return; }
+    setTimeout(() => waitForFirebase(cb, tries + 1), 100);
+  }
+
+  // ── State ────────────────────────────────────────────────────────────────────
+  let article = null;
+  let loved = false;
+  let bookmarked = false;
+  let loveCount = 0;
+
+  // ── Load article ─────────────────────────────────────────────────────────────
+  waitForFirebase(async function(db) {
+    try {
+      const snap = await db.collection('articles').doc(articleId).get();
+      if (!snap.exists) { showNotFound('Article not found.'); return; }
+
+      article = { id: snap.id, ...snap.data() };
+
+      // Increment view count
+      db.collection('articles').doc(articleId).update({
+        views: firebase.firestore.FieldValue.increment(1)
+      }).catch(() => {});
+
+      // Render
+      renderArticle(article);
+
+      // Update page title & og tags
+      document.title = `${article.title} — Aesthetic SAU NEWS`;
+
+    } catch(e) {
+      showNotFound('Error loading article: ' + e.message);
+    }
+  });
+
+  // ── Render ───────────────────────────────────────────────────────────────────
+  function renderArticle(a) {
+    const wrap = document.getElementById('article-wrap');
+    const ago = a.createdAt?.toDate ? timeAgo(a.createdAt.toDate()) : '';
+    const date = a.createdAt?.toDate
+      ? a.createdAt.toDate().toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'})
+      : '';
+    loveCount = a.loves || 0;
+
+    // Load love/bookmark state from localStorage
+    loved    = localStorage.getItem('loved_'    + a.id) === '1';
+    bookmarked = localStorage.getItem('bookmarked_' + a.id) === '1';
+
+    wrap.innerHTML = `
+      ${a.status === 'draft' ? `<div class="draft-notice">⚠ This article is a <strong>draft</strong> and not publicly visible.</div>` : ''}
+
+      <div class="article-eyebrow">
+        <a href="/" class="cat-pill ${catClass(a.category)}">${esc(a.category || 'Campus')}</a>
+        <span class="meta-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          ${readTime(a.body)}
+        </span>
+        <span class="view-count" id="view-count-el">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          ${(a.views || 0) + 1} views
+        </span>
+      </div>
+
+      <h1 class="article-title">${esc(a.title)}</h1>
+      ${a.excerpt ? `<p class="article-dek">${esc(a.excerpt)}</p>` : ''}
+
+      <div class="article-meta">
+        <div class="author-mini">
+          <div class="author-avatar-sm">${(a.authorName || 'S')[0].toUpperCase()}</div>
+          <div>
+            <div class="author-name-sm">${esc(a.authorName || 'SAU News')}</div>
+            <div class="author-role-sm">${esc(a.category || 'Reporter')} · ${date}</div>
+          </div>
+        </div>
+        ${ago ? `<span class="meta-divider">·</span><span class="meta-item">${ago}</span>` : ''}
+      </div>
+
+      ${a.coverImage ? `
+        <div class="article-cover">
+          <img src="${esc(a.coverImage)}" alt="${esc(a.title)}" loading="eager" />
+        </div>` : ''}
+
+      <div class="article-body" id="article-body">
+        ${formatBody(a.body || '')}
+      </div>
+
+      ${a.tags && a.tags.length ? `
+        <div class="article-tags">
+          ${a.tags.map(t => `<a href="/?tag=${esc(t)}" class="tag">${esc(t)}</a>`).join('')}
+        </div>` : ''}
+
+      <div class="article-actions-bar">
+        <button class="action-btn ${loved ? 'loved' : ''}" id="love-btn" onclick="toggleLove()">
+          <svg viewBox="0 0 24 24" fill="${loved ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 10-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+          <span id="love-count">${loveCount}</span>
+        </button>
+        <button class="action-btn ${bookmarked ? 'bookmarked' : ''}" id="bookmark-btn" onclick="toggleBookmark()">
+          <svg viewBox="0 0 24 24" fill="${bookmarked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+          ${bookmarked ? 'Saved' : 'Bookmark'}
+        </button>
+        <div class="share-wrap">
+          <button class="action-btn" onclick="toggleShare()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
+            Share
+          </button>
+          <div class="share-dropdown" id="share-dd">
+            <a href="#" onclick="shareTo('facebook');return false">📘 Facebook</a>
+            <a href="#" onclick="shareTo('twitter');return false">🐦 Twitter / X</a>
+            <a href="#" onclick="shareTo('whatsapp');return false">💬 WhatsApp</a>
+            <a href="#" onclick="copyLink();return false">🔗 Copy link</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="related-section" id="related-section"></div>
+    `;
+
+    // Sync sticky actions
+    syncStickyActions();
+
+    // Load related
+    loadRelated(a);
+  }
+
+  function syncStickyActions() {
+    const sl = document.getElementById('sticky-love');
+    const slc = document.getElementById('sticky-love-count');
+    const sb = document.getElementById('sticky-bookmark');
+    if (sl) { sl.className = 'action-btn' + (loved ? ' loved' : ''); }
+    if (slc) slc.textContent = loveCount;
+    if (sb) sb.className = 'action-btn' + (bookmarked ? ' bookmarked' : '');
+  }
+
+  // ── Love ─────────────────────────────────────────────────────────────────────
+  function toggleLove() {
+    if (!article) return;
+    loved = !loved;
+    loveCount = loved ? loveCount + 1 : Math.max(0, loveCount - 1);
+    localStorage.setItem('loved_' + article.id, loved ? '1' : '0');
+
+    const btn = document.getElementById('love-btn');
+    const countEl = document.getElementById('love-count');
+    if (btn) {
+      btn.className = 'action-btn' + (loved ? ' loved' : '');
+      btn.querySelector('svg').setAttribute('fill', loved ? 'currentColor' : 'none');
+    }
+    if (countEl) countEl.textContent = loveCount;
+
+    // Update Firestore
+    waitForFirebase(db => {
+      db.collection('articles').doc(article.id).update({
+        loves: firebase.firestore.FieldValue.increment(loved ? 1 : -1)
+      }).catch(() => {});
+    });
+
+    syncStickyActions();
+  }
+
+  // ── Bookmark ─────────────────────────────────────────────────────────────────
+  function toggleBookmark() {
+    if (!article) return;
+    bookmarked = !bookmarked;
+    localStorage.setItem('bookmarked_' + article.id, bookmarked ? '1' : '0');
+
+    const btn = document.getElementById('bookmark-btn');
+    if (btn) {
+      btn.className = 'action-btn' + (bookmarked ? ' bookmarked' : '');
+      btn.querySelector('svg').setAttribute('fill', bookmarked ? 'currentColor' : 'none');
+      btn.childNodes[btn.childNodes.length - 1].textContent = bookmarked ? ' Saved' : ' Bookmark';
+    }
+    syncStickyActions();
+  }
+
+  // ── Share ─────────────────────────────────────────────────────────────────────
+  function toggleShare() {
+    const dd = document.getElementById('share-dd');
+    if (dd) dd.classList.toggle('open');
+  }
+
+  function shareTo(platform) {
+    const url = encodeURIComponent(window.location.href);
+    const title = encodeURIComponent(article?.title || 'SAU NEWS');
+    const links = {
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
+      twitter:  `https://twitter.com/intent/tweet?url=${url}&text=${title}`,
+      whatsapp: `https://wa.me/?text=${title}%20${url}`,
+    };
+    if (links[platform]) window.open(links[platform], '_blank', 'width=600,height=400');
+    document.getElementById('share-dd')?.classList.remove('open');
+    document.getElementById('sticky-share-dd')?.classList.remove('open');
+  }
+
+  function copyLink() {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      showToast('Link copied! 🔗');
+    });
+    document.getElementById('share-dd')?.classList.remove('open');
+    document.getElementById('sticky-share-dd')?.classList.remove('open');
+  }
+
+  // ── Sticky share ─────────────────────────────────────────────────────────────
+  document.getElementById('sticky-love')?.addEventListener('click', toggleLove);
+  document.getElementById('sticky-bookmark')?.addEventListener('click', toggleBookmark);
+  document.getElementById('sticky-share')?.addEventListener('click', () => {
+    document.getElementById('sticky-share-dd')?.classList.toggle('open');
+  });
+
+  // ── Related articles ─────────────────────────────────────────────────────────
+  async function loadRelated(a) {
+    const section = document.getElementById('related-section');
+    if (!section) return;
+    try {
+      waitForFirebase(async db => {
+        const snap = await db.collection('articles')
+          .where('status', '==', 'published')
+          .where('category', '==', a.category)
+          .limit(4)
+          .get();
+
+        const related = snap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter(r => r.id !== a.id)
+          .slice(0, 3);
+
+        if (!related.length) return;
+
+        section.innerHTML = `
+          <h2 class="related-title">More from ${esc(a.category)}</h2>
+          <div class="related-grid">
+            ${related.map(r => `
+              <div class="related-card" onclick="location.href='article.html?id=${r.id}'">
+                <div class="related-cover">
+                  ${r.coverImage ? `<img src="${esc(r.coverImage)}" alt="${esc(r.title)}" loading="lazy" />` : ''}
+                </div>
+                <div class="related-body">
+                  <div class="related-cat">${esc(r.category || '')}</div>
+                  <div class="related-title-sm">${esc(r.title)}</div>
+                  <div class="related-meta">${readTime(r.body)}</div>
+                </div>
+              </div>`).join('')}
+          </div>`;
+      });
+    } catch(e) { /* silent */ }
+  }
+
+  // ── Not found ────────────────────────────────────────────────────────────────
+  function showNotFound(msg) {
+    document.getElementById('article-wrap').innerHTML = `
+      <div class="not-found">
+        <h2>Article not found</h2>
+        <p>${esc(msg)}</p>
+        <a href="/" style="color:var(--accent);font-weight:600">← Back to home</a>
+      </div>`;
+  }
+
+  // ── Toast ────────────────────────────────────────────────────────────────────
+  function showToast(msg) {
+    let t = document.getElementById('sau-toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'sau-toast';
+      t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 18px;border-radius:20px;font-size:13px;z-index:9999;transition:opacity .3s';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.style.opacity = '1';
+    clearTimeout(t._t);
+    t._t = setTimeout(() => { t.style.opacity = '0'; }, 2500);
+  }
+
+  // Close dropdowns on outside click
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.share-wrap')) {
+      document.querySelectorAll('.share-dropdown').forEach(d => d.classList.remove('open'));
+    }
+  });
+
+  // Expose for inline handlers
+  window.toggleLove = toggleLove;
+  window.toggleBookmark = toggleBookmark;
+  window.toggleShare = toggleShare;
+  window.shareTo = shareTo;
+  window.copyLink = copyLink;
+
+})();
+</script>
+</body>
+</html>
