@@ -1,113 +1,109 @@
-// firestore.rules
-// ─────────────────────────────────────────────────────────────
-// Aesthetic SAU News — Role-Based Firestore Security Rules
-// Deploy with: firebase deploy --only firestore:rules
-// ─────────────────────────────────────────────────────────────
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── Helper functions ─────────────────────────────────────
-
-    // Get the caller's Firestore profile
-    function userDoc() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    // ── Helper: get caller's role safely ─────────────────────────
+    // Returns null if profile doesn't exist yet (first login)
+    function getRole() {
+      let doc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      return doc.data.get('role', null);
     }
 
-    // True if caller is authenticated
+    function isActive() {
+      let doc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      return doc.data.get('active', true) == true;
+    }
+
     function isAuth() {
       return request.auth != null;
     }
 
-    // True if caller has at least one of the given roles
-    function hasRole(roles) {
-      return isAuth() && userDoc().role in roles && userDoc().active == true;
+    // Only check role if user profile exists; otherwise allow basic access
+    function profileExists() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
     }
 
-    // Convenience role checks
-    function isSuperAdmin() { return hasRole(['super_admin']); }
-    function isAdmin()      { return hasRole(['super_admin', 'admin']); }
-    function isEditor()     { return hasRole(['super_admin', 'admin', 'editor']); }
-    function isJournalist() { return hasRole(['super_admin', 'admin', 'editor', 'journalist']); }
-    function isModerator()  { return hasRole(['super_admin', 'admin', 'editor', 'moderator']); }
+    function hasRole(roles) {
+      return isAuth() && profileExists() && getRole() in roles && isActive();
+    }
 
-    // ── /users collection ────────────────────────────────────
+    function isSuperAdmin() { return hasRole(['super_admin']); }
+    function isAdmin()      { return hasRole(['super_admin','admin']); }
+    function isEditor()     { return hasRole(['super_admin','admin','editor']); }
+    function isJournalist() { return hasRole(['super_admin','admin','editor','journalist']); }
+    function isModerator()  { return hasRole(['super_admin','admin','editor','moderator']); }
+
+    // ── /users ────────────────────────────────────────────────────
     match /users/{uid} {
-      // Anyone can create their own profile on first login
+      // Anyone authenticated can create their OWN profile (first login)
       allow create: if isAuth() && request.auth.uid == uid;
 
-      // Users can read their own; admins can read all
-      allow read: if isAuth() && (request.auth.uid == uid || isAdmin());
+      // Users can always read their own profile
+      // Admins can read all profiles
+      allow read: if isAuth() && (
+        request.auth.uid == uid || isAdmin()
+      );
 
-      // Users can update their own non-role fields
+      // Users can update their own profile BUT cannot change role/active
       allow update: if isAuth() && request.auth.uid == uid
-                    && !('role' in request.resource.data.diff(resource.data).affectedKeys());
+        && !('role'   in request.resource.data.diff(resource.data).affectedKeys())
+        && !('active' in request.resource.data.diff(resource.data).affectedKeys());
 
-      // Only super_admin can change roles
+      // Super Admin can update anything (including role assignment)
       allow update: if isSuperAdmin();
 
-      // Only super_admin can delete users
+      // Only super_admin can delete
       allow delete: if isSuperAdmin();
     }
 
-    // ── /articles collection ─────────────────────────────────
+    // ── /articles ─────────────────────────────────────────────────
     match /articles/{articleId} {
-      // Public reads for published articles (for the homepage)
-      allow read: if resource.data.status == 'published'
+      // Published articles: public read
+      // Staff: can read all
+      allow read: if resource.data.get('status','draft') == 'published'
                   || (isAuth() && isJournalist());
 
-      // Create: journalist and above
+      // Create: journalist+, must set own email as author
       allow create: if isJournalist()
-                    && request.resource.data.authorEmail == request.auth.token.email;
+        && request.resource.data.get('authorEmail','') == request.auth.token.email;
 
-      // Update:
-      //   - editors+ can edit any article
-      //   - journalists can edit only their own (and cannot change status to 'published')
+      // Edit any: editor+
+      // Edit own draft only: journalist (cannot self-publish)
       allow update: if isEditor()
-                    || (isJournalist()
-                        && resource.data.authorEmail == request.auth.token.email
-                        && request.resource.data.status != 'published');
+        || (
+          isJournalist()
+          && resource.data.get('authorEmail','') == request.auth.token.email
+          && request.resource.data.get('status','draft') != 'published'
+        );
 
-      // Delete: admin+ only
+      // Delete: admin+
       allow delete: if isAdmin();
     }
 
-    // ── /comments collection ─────────────────────────────────
+    // ── /comments ─────────────────────────────────────────────────
     match /comments/{commentId} {
-      // Public reads
-      allow read: if true;
-
-      // Anyone authenticated can create a comment
+      allow read:   if true;
       allow create: if isAuth();
-
-      // Moderators, editors, admins can update (approve/reject)
       allow update: if isModerator();
-
-      // Admins and moderators can delete
       allow delete: if isModerator();
     }
 
-    // ── /siteConfig collection ───────────────────────────────
+    // ── /siteConfig ───────────────────────────────────────────────
     match /siteConfig/{docId} {
-      // Public reads (homepage needs lastUpdated)
-      allow read: if true;
-
-      // Only admin+ can write config
+      allow read:  if true;
       allow write: if isAdmin();
     }
 
-    // ── /siteStats collection ────────────────────────────────
+    // ── /siteStats ────────────────────────────────────────────────
     match /siteStats/{docId} {
-      allow read: if true;
-      // Anyone can increment counters (visit counts etc.)
-      allow update: if isAuth() || true; // relax for anonymous visit counts
+      allow read:   if true;
       allow create: if true;
+      allow update: if true;
       allow delete: if isAdmin();
     }
 
-    // ── Deny everything else ─────────────────────────────────
+    // ── Deny everything else ──────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;
     }
