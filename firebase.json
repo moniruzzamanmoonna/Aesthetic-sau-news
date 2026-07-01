@@ -63,7 +63,7 @@
           }
         ]
       },
-      {
+       {
         "source": "**/*.html",
         "headers": [
           {
